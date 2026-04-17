@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduIng — Herramientas de Ingeniería Civil</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10; --surface: #12151c; --surface2: #1c212c; --border: #2d3446;
+    --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.15);
+    --text: #f1f5f9; --text-muted: #94a3b8; --purple: #a855f7;
+    --sans: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.6; }
+
+  /* Navbar */
+  header {
+    height: 70px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%; background: rgba(10, 12, 16, 0.8); backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: var(--mono); font-weight: 700; font-size: 22px; color: var(--text); text-decoration: none; }
+  .logo span { color: var(--accent); }
+  .nav-links a { color: var(--text-muted); text-decoration: none; margin-left: 30px; font-size: 14px; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* Hero Section */
+  .hero { text-align: center; padding: 100px 20px; max-width: 800px; margin: 0 auto; }
+  .badge { display: inline-block; padding: 6px 12px; background: var(--accent-glow); border: 1px solid var(--accent); color: var(--accent); border-radius: 20px; font-family: var(--mono); font-size: 12px; margin-bottom: 20px; }
+  .hero h1 { font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; letter-spacing: -1px; }
+  .hero p { color: var(--text-muted); font-size: 18px; margin-bottom: 40px; }
+
+  /* Grid de Herramientas */
+  .section-title { text-align: center; font-family: var(--mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-size: 12px; margin-bottom: 40px; }
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; padding: 0 5% 100px; max-width: 1200px; margin: 0 auto; }
+  
+  /* Tarjetas (Cards) */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 30px; transition: all 0.3s ease; text-decoration: none; color: var(--text);
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 30px var(--accent-glow); }
+  .card-icon { width: 50px; height: 50px; background: var(--surface2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; border: 1px solid var(--border); }
+  .card h3 { font-family: var(--mono); font-size: 20px; margin-bottom: 10px; color: var(--accent); }
+  .card p { color: var(--text-muted); font-size: 14px; flex-grow: 1; }
+  .card-footer { margin-top: 20px; font-family: var(--mono); font-size: 12px; color: var(--text); font-weight: 600; display: flex; align-items: center; justify-content: space-between;}
+  
+  /* Estado Inactivo (Próximamente) */
+  .card.disabled { opacity: 0.6; pointer-events: none; }
+  .card.disabled h3 { color: var(--text-muted); }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--border); text-align: center; padding: 30px; color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+  <header>
+    <a href="#" class="logo">Edu<span>Ing</span></a>
+    <nav class="nav-links">
+      <a href="#herramientas">Herramientas</a>
+      <a href="#recursos">Recursos</a>
+      <a href="#nosotros">Acerca de</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="badge">PLATAFORMA EDUCATIVA UNIVERSITARIA</div>
+    <h1>Análisis estructural al alcance de tu navegador.</h1>
+    <p>Desarrollamos herramientas precisas e intuitivas para estudiantes y profesionales de Ingeniería Civil. Sin instalaciones, directo al cálculo.</p>
+  </section>
+
+  <div id="herramientas">
+    <div class="section-title">Catálogo de Aplicaciones</div>
+    
+    <div class="tools-grid">
+      <a href="viga_pro.html" class="card">
+        <div class="card-icon">📐</div>
+        <h3>ViGA Pro</h3>
+        <p>Analizador matricial de vigas isostáticas. Soporta rótulas, cargas de grado superior (parábolas, senos) y genera diagramas exactos.</p>
+        <div class="card-footer">
+          <span>Abrir aplicación</span>
+          <span style="color: var(--accent)">→</span>
+        </div>
+      </a>
+
+      <div class="card disabled">
+        <div class="card-icon" style="filter: grayscale(1)">🏗️</div>
+        <h3>Pórticos 2D</h3>
+        <p>Análisis de pórticos planos hiperestáticos mediante el método de rigidez. (En desarrollo).</p>
+        <div class="card-footer">
+          <span style="color: var(--purple)">Próximamente</span>
+        </div>
+      </div>
+
+      <div class="card disabled">
+        <div class="card-icon" style="filter: grayscale(1)">📊</div>
+        <h3>Propiedades de Sección</h3>
+        <p>Calculadora de inercias, centroides y módulos resistentes para perfiles metálicos y secciones de hormigón.</p>
+        <div class="card-footer">
+          <span style="color: var(--purple)">Próximamente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 EduIng. Creado para la comunidad universitaria de Ingeniería Civil.</p>
+  </footer>
+
+</body>
+</html>

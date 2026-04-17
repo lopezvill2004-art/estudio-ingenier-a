@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViGA Pro — Civil Engineering Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0a0c10; --surface: #12151c; --surface2: #1c212c; --border: #2d3446;
+  --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
+  --error: #ef4444; --success: #10b981; --warning: #f59e0b; --purple: #a855f7;
+  --text: #f1f5f9; --text-muted: #94a3b8;
+  --sans: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+  background: var(--bg); color: var(--text); font-family: var(--sans); 
+  font-size: 13px; line-height: 1.5; height: 100vh; overflow: hidden;
+}
+
+header {
+  height: 56px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px;
+  background: rgba(10, 12, 16, 0.8); backdrop-filter: blur(10px);
+}
+.logo { font-family: var(--mono); font-weight: 700; font-size: 18px; color: var(--accent); }
+.badge-pro { background: var(--accent-glow); color: var(--accent); padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 10px; border: 1px solid var(--accent); }
+
+.main-layout { display: grid; grid-template-columns: 380px 1fr; height: calc(100vh - 56px); }
+
+aside { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+.tabs-header { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); }
+.tab-btn { flex: 1; padding: 12px; border: none; background: none; color: var(--text-muted); cursor: pointer; font-family: var(--mono); font-size: 11px; transition: 0.2s; }
+.tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: var(--surface); }
+
+.tab-content { padding: 20px; display: none; flex-direction: column; gap: 15px; }
+.tab-content.active { display: flex; }
+
+.section-title { font-family: var(--mono); font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+
+.input-group { display: flex; flex-direction: column; gap: 6px; }
+.input-group label { font-size: 11px; color: var(--text-muted); }
+input, select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-family: var(--mono); outline: none; }
+input:focus { border-color: var(--accent); }
+
+.btn-action { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; cursor: pointer; font-family: var(--mono); font-size: 11px; transition: 0.2s; }
+.btn-action:hover { border-color: var(--accent); }
+
+main { padding: 24px; overflow-y: auto; background: #0d0f14; display: flex; flex-direction: column; gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+#viga-svg { background: #12151c; border-radius: 8px; width: 100%; height: 180px; display: block; }
+
+#panel-status { padding: 12px; border-radius: 8px; font-size: 11px; font-family: var(--mono); line-height: 1.4; border: 1px solid var(--border); }
+.status-iso { border-color: var(--success) !important; color: var(--success); background: rgba(16, 185, 129, 0.1); }
+.status-hiper { border-color: var(--warning) !important; color: var(--warning); background: rgba(245, 158, 11, 0.1); }
+.status-inest { border-color: var(--error) !important; color: var(--error); background: rgba(239, 68, 68, 0.1); }
+
+.elem-list { display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; }
+.elem-item { background: var(--surface2); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+.elem-item span { font-size: 11px; font-family: var(--mono); }
+.btn-del { color: var(--error); background: none; border: none; cursor: pointer; font-size: 14px; }
+
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.btn-primary { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 6px; font-weight: 600; cursor: pointer; margin: 20px; font-family: var(--sans); }
+.btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.tabla-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-height: 350px; margin-top: 10px; }
+table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; text-align: right; }
+thead th { background: var(--surface2); color: var(--text-muted); padding: 10px 14px; position: sticky; top: 0; font-weight: 600; z-index: 2; border-bottom: 1px solid var(--border); }
+thead th:first-child { text-align: left; }
+tbody tr { border-bottom: 1px solid rgba(45, 52, 70, 0.5); }
+tbody tr:nth-child(even) { background: rgba(255,255,255,0.01); }
+tbody tr:hover { background: rgba(59, 130, 246, 0.05); }
+tbody td { padding: 8px 14px; }
+tbody td:first-child { text-align: left; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ViGA <span style="font-weight:300; color:var(--text-muted)">PRO</span></div>
+  <div class="badge-pro">V5.9 (DISEÑO VECTORIAL DE MOMENTOS)</div>
+</header>
+
+<div class="main-layout">
+  <aside>
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('tab-viga')">VIGA</button>
+      <button class="tab-btn" onclick="switchTab('tab-apoyos')">APOYOS / RÓTULAS</button>
+      <button class="tab-btn" onclick="switchTab('tab-cargas')">CARGAS</button>
+    </div>
+
+    <div id="tab-viga" class="tab-content active">
+      <div class="section-title">Parámetros Globales</div>
+      <div class="input-group">
+        <label>Longitud Total (L) m</label>
+        <input type="number" id="inp-L" value="10" oninput="updateAll()">
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 5px;">
+        <div class="input-group">
+          <label>Resolución Gráfica (dx)</label>
+          <input type="number" id="inp-dx" value="0.05" step="0.01">
+        </div>
+        <div class="input-group">
+          <label>Separación Tabla (m)</label>
+          <input type="number" id="inp-dx-tabla" value="0.5" step="0.1">
+        </div>
+      </div>
+      <div id="panel-status">Inicie agregando apoyos...</div>
+      <button onclick="limpiarProyecto()" style="background:none; border:none; color:var(--error); cursor:pointer; font-size:11px; margin-top:20px; text-align:left;">RESETEAR PROYECTO</button>
+    </div>
+
+    <div id="tab-apoyos" class="tab-content">
+      <div class="section-title">Gestionar Apoyos</div>
+      <div class="input-group">
+        <select id="sel-ap-tipo">
+          <option value="fijo">Fijo (Rx, Ry)</option>
+          <option value="movil">Móvil (Ry)</option>
+          <option value="empotrado">Empotrado (Rx, Ry, M)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Posición x (m)</label>
+        <input type="number" id="inp-ap-x" value="0" step="0.5">
+      </div>
+      <button class="btn-action" onclick="agregarApoyo()">+ Añadir Apoyo</button>
+      
+      <div class="section-title" style="margin-top:10px">Rótulas Internas</div>
+      <div class="input-group">
+        <label>Posición x (m)</label>
+        <input type="number" id="inp-rot-x" value="5" step="0.5">
+      </div>
+      <button class="btn-action" onclick="agregarRotula()">+ Añadir Rótula</button>
+      <div class="elem-list" id="lista-apoyos"></div>
+    </div>
+
+    <div id="tab-cargas" class="tab-content">
+      <div class="section-title">Nueva Carga</div>
+      <div class="input-group">
+        <select id="sel-c-tipo" onchange="toggleCargaUI()">
+          <option value="1">Puntual (kN)</option>
+          <option value="2">Distribuida Uniforme (kN/m)</option>
+          <option value="3">Triangular Creciente (0 → q)</option>
+          <option value="4">Triangular Descendente (q → 0)</option>
+          <option value="5">Parabólica (y = kx²)</option>
+          <option value="6">Sinusoidal (Medio ciclo: 0 → q → 0)</option>
+          <option value="7">Cosenoidal (Cuarto ciclo: q → 0)</option>
+          <option value="8">Momento Puntual (kN·m)</option>
+        </select>
+      </div>
+
+      <div id="ui-sentido" style="display:none;" class="input-group">
+        <label>Sentido del Momento</label>
+        <div style="display:flex; gap:5px;">
+          <button id="btn-cw" class="btn-action" style="flex:1" onclick="setSentido('cw')">↻ Horario (-)</button>
+          <button id="btn-ccw" class="btn-action active" style="flex:1; border-color:var(--accent)" onclick="setSentido('ccw')">↺ Antihorario (+)</button>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label id="lbl-x">Posición de inicio x (m)</label>
+        <input type="number" id="inp-c-x" value="0" step="0.5">
+      </div>
+      <div id="ui-xf" style="display:none;" class="input-group">
+        <label>Posición final x (m)</label>
+        <input type="number" id="inp-c-xf" value="5" step="0.5">
+      </div>
+      <div class="input-group">
+        <label>Magnitud máxima (q o M)</label>
+        <input type="number" id="inp-c-mag" value="10">
+      </div>
+      <button class="btn-action" onclick="agregarCarga()">+ Agregar Carga</button>
+      
+      <div class="elem-list" id="lista-cargas"></div>
+    </div>
+
+    <button class="btn-primary" id="btn-calcular" onclick="ejecutarCalculo()" disabled>CALCULAR Y TABULAR</button>
+  </aside>
+
+  <main>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:10px">Modelo Analítico Estático</div>
+      <svg id="viga-svg"></svg>
+    </div>
+
+    <div class="card" id="res-reacciones" style="display:none">
+      <div class="section-title">Reacciones Resultantes</div>
+      <div id="reac-grid" style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap"></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:15px">Diagrama de Cortante V(x)</div>
+        <canvas id="chart-V"></canvas>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:15px">Diagrama de Momento M(x)</div>
+        <canvas id="chart-M"></canvas>
+      </div>
+    </div>
+
+    <div class="card" id="res-tabla" style="display:none">
+      <div class="section-title">Tabla de Esfuerzos Internos</div>
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Posición x (m)</th>
+              <th>Cortante V (kN)</th>
+              <th>Momento M (kN·m)</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let _apoyos = [], _rotulas = [], _cargas = [], _sentido = 'ccw', _charts = {};
+
+const APOYO_DEF = {
+  fijo: { DOF: 1, color: '#3b82f6', label: 'Fijo' },
+  movil: { DOF: 1, color: '#10b981', label: 'Móvil' },
+  empotrado: { DOF: 2, color: '#f59e0b', label: 'Empotrado' }
+};
+
+const CARGAS_DEF = {
+  1: 'Puntual', 2: 'Dist. Uniforme', 3: 'Triang. Creciente', 4: 'Triang. Descendente', 
+  5: 'Parabólica', 6: 'Sinusoidal', 7: 'Cosenoidal', 8: 'Momento'
+};
+
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function toggleCargaUI() {
+  const t = document.getElementById('sel-c-tipo').value;
+  document.getElementById('ui-sentido').style.display = (t == 8) ? 'block' : 'none';
+  document.getElementById('ui-xf').style.display = (t >= 2 && t <= 7) ? 'block' : 'none';
+}
+
+function setSentido(s) {
+  _sentido = s;
+  document.getElementById('btn-cw').style.borderColor = (s==='cw') ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-ccw').style.borderColor = (s==='ccw') ? 'var(--accent)' : 'var(--border)';
+}
+
+function limpiarProyecto() {
+  _apoyos = []; _rotulas = []; _cargas = [];
+  document.getElementById('res-reacciones').style.display = 'none';
+  document.getElementById('res-tabla').style.display = 'none';
+  if(_charts['chart-V']) _charts['chart-V'].destroy();
+  if(_charts['chart-M']) _charts['chart-M'].destroy();
+  updateAll();
+}
+
+function agregarApoyo() {
+  _apoyos.push({ tipo: document.getElementById('sel-ap-tipo').value, x: parseFloat(document.getElementById('inp-ap-x').value) });
+  updateAll();
+}
+
+function agregarRotula() {
+  _rotulas.push({ x: parseFloat(document.getElementById('inp-rot-x').value) });
+  updateAll();
+}
+
+function agregarCarga() {
+  const tipo = parseInt(document.getElementById('sel-c-tipo').value);
+  const xIni = parseFloat(document.getElementById('inp-c-x').value);
+  const xFin = (tipo >= 2 && tipo <= 7) ? parseFloat(document.getElementById('inp-c-xf').value) : xIni;
+  let mag = parseFloat(document.getElementById('inp-c-mag').value);
+
+  if (tipo === 8) mag = (_sentido === 'cw') ? -Math.abs(mag) : Math.abs(mag);
+
+  _cargas.push({ tipo, xIni, xFin, magnitud: mag });
+  updateAll();
+}
+
+function updateAll() {
+  renderListas(); dibujarViga(); validarIsostaticidad();
+}
+
+function renderListas() {
+  document.getElementById('lista-apoyos').innerHTML = _apoyos.map((a,i) => `<div class="elem-item"><span>${APOYO_DEF[a.tipo].label} @ x=${a.x}</span><button class="btn-del" onclick="_apoyos.splice(${i},1);updateAll()">×</button></div>`).join('') +
+    _rotulas.map((r,i) => `<div class="elem-item"><span style="color:var(--purple)">Rótula @ x=${r.x}</span><button class="btn-del" onclick="_rotulas.splice(${i},1);updateAll()">×</button></div>`).join('');
+  
+  document.getElementById('lista-cargas').innerHTML = _cargas.map((c,i) => `<div class="elem-item"><span>${CARGAS_DEF[c.tipo]} (${c.magnitud})</span><button class="btn-del" onclick="_cargas.splice(${i},1);updateAll()">×</button></div>`).join('');
+}
+
+function validarIsostaticidad() {
+  const p = document.getElementById('panel-status'), b = document.getElementById('btn-calcular');
+  if (!_apoyos.length) { p.className=''; p.innerText='Agregue apoyos.'; b.disabled=true; return; }
+  const dof = _apoyos.reduce((s, a) => s + APOYO_DEF[a.tipo].DOF, 0), eq = 2 + _rotulas.length;
+  if (dof === eq) { p.className='status-iso'; p.innerText='ISOSTÁTICA ✓'; b.disabled=false; }
+  else if (dof > eq) { p.className='status-hiper'; p.innerText=`HIPERESTÁTICA (sobran ${dof-eq})`; b.disabled=true; }
+  else { p.className='status-inest'; p.innerText=`INESTABLE (faltan ${eq-dof})`; b.disabled=true; }
+}
+
+function calcularFuerzaYMomentoParcial(c, xa, xb, xr) {
+  const Lc = c.xFin - c.xIni;
+  const Lef = xb - xa;
+  let P = 0, M = 0; 
+  const q0 = c.magnitud;
+
+  if (c.tipo === 1) { P = q0; M = q0 * (xr - xa); } 
+  else if (c.tipo === 2) { P = q0 * Lef; M = P * (xr - (xa + Lef/2)); } 
+  else if (c.tipo === 3) { P = 0.5 * (q0 * (Lef / Lc)) * Lef; M = P * (xr - (xa + (2/3)*Lef)); } 
+  else if (c.tipo === 4) {
+    const q_right = q0 * (1 - Lef/Lc);
+    const P_u = q_right * Lef, P_t = 0.5 * (q0 - q_right) * Lef;
+    P = P_u + P_t; M = P_u * (xr - (xa + Lef/2)) + P_t * (xr - (xa + (1/3)*Lef));
+  } 
+  else if (c.tipo === 5) { P = q0 * Math.pow(Lef, 3) / (3 * Math.pow(Lc, 2)); M = P * (xr - (xa + (3/4)*Lef)); }
+  else if (c.tipo === 6) { 
+    const k = Math.PI / Lc;
+    P = (q0 / k) * (1 - Math.cos(k * Lef));
+    const term1 = (xr - xa) * (1 - Math.cos(k * Lef)) / k;
+    const term2 = (Math.sin(k * Lef) / (k * k)) - (Lef * Math.cos(k * Lef) / k);
+    M = q0 * (term1 - term2);
+  }
+  else if (c.tipo === 7) {
+    const k = Math.PI / (2 * Lc);
+    P = q0 * Math.sin(k * Lef) / k;
+    const term1 = (xr - xa) * Math.sin(k * Lef) / k;
+    const term2 = (Lef * Math.sin(k * Lef) / k) + ((Math.cos(k * Lef) - 1) / (k * k));
+    M = q0 * (term1 - term2);
+  }
+  return { P, M };
+}
+
+function momentoCargasIzq(xr) {
+  let m = 0;
+  _cargas.forEach(c => {
+    if (c.tipo === 8 && c.xIni <= xr) m += c.magnitud; 
+    else if (c.xIni <= xr) {
+      const xb = Math.min(c.xFin, xr);
+      if (xb >= c.xIni) m += calcularFuerzaYMomentoParcial(c, c.xIni, xb, xr).M;
+    }
+  });
+  return m;
+}
+
+function ejecutarCalculo() {
+  const L = parseFloat(document.getElementById('inp-L').value);
+  const sops = [..._apoyos].sort((a,b) => a.x - b.x);
+  let unks = [];
+  
+  sops.forEach((ap, id) => {
+    unks.push({ type: 'Ry', x: ap.x });
+    if (ap.tipo === 'empotrado') unks.push({ type: 'M', x: ap.x });
+  });
+
+  const N = unks.length;
+  const mat = Array.from({length: N}, () => new Array(N).fill(0)), rhs = new Array(N).fill(0);
+
+  for(let k=0; k<N; k++) mat[0][k] = (unks[k].type === 'Ry') ? 1 : 0;
+  _cargas.forEach(c => { if (c.tipo !== 8) rhs[0] += calcularFuerzaYMomentoParcial(c, c.xIni, c.xFin, 0).P; });
+
+  for(let k=0; k<N; k++) mat[1][k] = (unks[k].type === 'Ry') ? unks[k].x : 1;
+  _cargas.forEach(c => {
+    if(c.tipo === 8) rhs[1] -= c.magnitud;
+    else rhs[1] -= calcularFuerzaYMomentoParcial(c, c.xIni, c.xFin, 0).M; 
+  });
+
+  _rotulas.forEach((rot, j) => {
+    const eq = 2 + j, xr = rot.x;
+    for(let k=0; k<N; k++) {
+      if(unks[k].x <= xr) mat[eq][k] = (unks[k].type === 'Ry') ? (xr - unks[k].x) : -1;
+    }
+    rhs[eq] = momentoCargasIzq(xr);
+  });
+
+  const res = resolverGauss(mat, rhs);
+  if (!res) return;
+  unks.forEach((u, i) => { u.val = res[i]; });
+  
+  document.getElementById('reac-grid').innerHTML = unks.map(u => `<div style="background:var(--surface2); padding:10px; border:1px solid var(--border); border-radius:6px; min-width:110px"><div style="font-size:10px; color:var(--text-muted)">x=${u.x}m</div><div style="color:var(--accent); font-weight:bold; font-size:15px">${u.type}=${u.val.toFixed(2)}</div></div>`).join('');
+  document.getElementById('res-reacciones').style.display = 'block';
+
+  generarDiagramasYTabla(L, unks);
+}
+
+function resolverGauss(A, b) {
+  const n = b.length;
+  for (let i = 0; i < n; i++) {
+    let max = i;
+    for (let j = i + 1; j < n; j++) if (Math.abs(A[j][i]) > Math.abs(A[max][i])) max = j;
+    [A[i], A[max]] = [A[max], A[i]]; [b[i], b[max]] = [b[max], b[i]];
+    if (Math.abs(A[i][i]) < 1e-10) { alert("Error: Mecanismo inestable."); return null; }
+    for (let j = i + 1; j < n; j++) {
+      let f = A[j][i] / A[i][i]; b[j] -= f * b[i];
+      for (let k = i; k < n; k++) A[j][k] -= f * A[i][k];
+    }
+  }
+  const x = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) {
+    let s = 0; for (let j = i + 1; j < n; j++) s += A[i][j] * x[j];
+    x[i] = (b[i] - s) / A[i][i];
+  }
+  return x;
+}
+
+function calcularEsfuerzosEnX(x, unks) {
+  let v = 0, m = 0;
+  unks.forEach(u => { 
+    if(x >= u.x) { 
+      if(u.type === 'Ry') { v += u.val; m += u.val * (x - u.x); } 
+      else if(u.type === 'M') { m -= u.val; }
+    } 
+  });
+  
+  _cargas.forEach(c => {
+    if(c.tipo === 8 && x >= c.xIni) { m -= c.magnitud; } 
+    else if(x >= c.xIni && c.tipo !== 8) {
+      const xb = Math.min(c.xFin, x);
+      if(xb >= c.xIni) {
+        const res = calcularFuerzaYMomentoParcial(c, c.xIni, xb, x);
+        v -= res.P;
+        m -= res.M;
+      }
+    }
+  });
+  return { v, m };
+}
+
+function generarDiagramasYTabla(L, unks) {
+  const dx_grafico = parseFloat(document.getElementById('inp-dx').value) || 0.05;
+  const dx_tabla = parseFloat(document.getElementById('inp-dx-tabla').value) || 0.5;
+  
+  let labels = [], vs = [], ms = [];
+  for(let x=0; x<=L+0.001; x+=dx_grafico) {
+    let {v, m} = calcularEsfuerzosEnX(x, unks);
+    labels.push(x.toFixed(2)); vs.push(v); ms.push(m);
+  }
+  updateChart('chart-V', labels, vs, '#3b82f6', 'Cortante V (kN)'); 
+  updateChart('chart-M', labels, ms, '#f59e0b', 'Momento M (kN·m)');
+
+  let htmlTabla = '';
+  for(let x=0; x<=L+0.001; x+=dx_tabla) {
+    let {v, m} = calcularEsfuerzosEnX(x, unks);
+    let colorV = v >= 0 ? 'var(--accent)' : 'var(--error)';
+    let colorM = m >= 0 ? 'var(--warning)' : 'var(--error)';
+    htmlTabla += `<tr><td>${x.toFixed(2)}</td><td style="color:${colorV}">${v.toFixed(3)}</td><td style="color:${colorM}">${m.toFixed(3)}</td></tr>`;
+  }
+  document.getElementById('tabla-body').innerHTML = htmlTabla;
+  document.getElementById('res-tabla').style.display = 'block';
+}
+
+function updateChart(id, l, d, c, t) {
+  if(_charts[id]) _charts[id].destroy();
+  _charts[id] = new Chart(document.getElementById(id), {
+    type: 'line', data: { labels: l, datasets: [{ label: t, data: d, borderColor: c, backgroundColor: c+'22', fill: true, pointRadius: 0, borderWidth: 2 }] },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { x: { ticks: { color: '#6b7591', maxTicksLimit: 12 }, grid: { color: '#1e2330' } }, y: { ticks: { color: '#6b7591' }, grid: { color: '#1e2330' } } } }
+  });
+}
+
+function SVG_Apoyo(tipo, x, y, color, w) {
+  if (tipo === 'fijo') {
+    return `
+      <polygon points="${x},${y} ${x-10},${y+15} ${x+10},${y+15}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="${x-15}" y1="${y+15}" x2="${x+15}" y2="${y+15}" stroke="${color}" stroke-width="2"/>
+      <line x1="${x-10}" y1="${y+15}" x2="${x-15}" y2="${y+21}" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${x-2}" y1="${y+15}" x2="${x-7}" y2="${y+21}" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${x+6}" y1="${y+15}" x2="${x+1}" y2="${y+21}" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${x+14}" y1="${y+15}" x2="${x+9}" y2="${y+21}" stroke="${color}" stroke-width="1.5"/>
+    `;
+  } 
+  else if (tipo === 'movil') {
+    return `
+      <polygon points="${x},${y} ${x-10},${y+12} ${x+10},${y+12}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+      <circle cx="${x-5}" cy="${y+16}" r="3" fill="none" stroke="${color}" stroke-width="1.5"/>
+      <circle cx="${x+5}" cy="${y+16}" r="3" fill="none" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${x-15}" y1="${y+20}" x2="${x+15}" y2="${y+20}" stroke="${color}" stroke-width="2"/>
+    `;
+  }
+  else if (tipo === 'empotrado') {
+    let isLeft = x < (w/2);
+    let dir = isLeft ? -1 : 1;
+    let wx = x + (isLeft ? -2 : 2);
+    return `
+      <line x1="${wx}" y1="${y-25}" x2="${wx}" y2="${y+25}" stroke="${color}" stroke-width="3"/>
+      <line x1="${wx}" y1="${y-20}" x2="${wx + dir*8}" y2="${y-25}" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${wx}" y1="${y-10}" x2="${wx + dir*8}" y2="${y-15}" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${wx}" y1="${y}" x2="${wx + dir*8}" y2="${y-5}" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${wx}" y1="${y+10}" x2="${wx + dir*8}" y2="${y+5}" stroke="${color}" stroke-width="1.5"/>
+      <line x1="${wx}" y1="${y+20}" x2="${wx + dir*8}" y2="${y+15}" stroke="${color}" stroke-width="1.5"/>
+    `;
+  }
+  return '';
+}
+
+function dibujarViga() {
+  const L = parseFloat(document.getElementById('inp-L').value), svg = document.getElementById('viga-svg');
+  const w = svg.clientWidth || 800, pad = 50, sc = (w - 2*pad) / L, y = 110;
+  
+  let draw = `<line x1="${pad}" y1="${y}" x2="${w-pad}" y2="${y}" stroke="var(--border)" stroke-width="6" />`;
+  
+  _apoyos.forEach(ap => {
+    let x = pad + ap.x * sc;
+    draw += SVG_Apoyo(ap.tipo, x, y, APOYO_DEF[ap.tipo].color, w);
+  });
+
+  _rotulas.forEach(r => draw += `<circle cx="${pad + r.x * sc}" cy="${y}" r="6" fill="var(--bg)" stroke="var(--purple)" stroke-width="2" />`);
+
+  _cargas.forEach(c => {
+    let x = pad + c.xIni * sc, xf = pad + c.xFin * sc;
+    
+    // ======== MEJORA VISUAL: MOMENTO PUNTUAL ========
+    if(c.tipo === 8) {
+      const isCW = c.magnitud < 0;
+      const r = 16;
+      const col = 'var(--purple)';
+      
+      // Dibujamos un arco dinámico:
+      // Horario (CW): salta de Izquierda a Derecha
+      // Antihorario (CCW): salta de Derecha a Izquierda
+      const path = isCW 
+        ? `M ${x - r} ${y + 2} A ${r} ${r} 0 0 1 ${x + r} ${y + 2}` 
+        : `M ${x + r} ${y + 2} A ${r} ${r} 0 0 0 ${x - r} ${y + 2}`; 
+      
+      // Trayectoria de flecha curva
+      draw += `<path d="${path}" fill="none" stroke="${col}" stroke-width="2.5" marker-end="url(#arrow-mom)" stroke-linecap="round"/>`;
+      
+      // Pivote / Anillo central en la viga
+      draw += `<circle cx="${x}" cy="${y}" r="4" fill="var(--bg)" stroke="${col}" stroke-width="2"/>`;
+      
+      // Texto de magnitud y sentido
+      draw += `<text x="${x}" y="${y - r - 8}" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="${col}" font-weight="700">${Math.abs(c.magnitud)} kN·m ${isCW ? '↻' : '↺'}</text>`;
+    }
+    // ================================================
+    
+    else if(c.tipo === 1) draw += `<line x1="${x}" y1="${y-40}" x2="${x}" y2="${y-5}" stroke="var(--error)" stroke-width="2" marker-end="url(#arrow)" />`;
+    else if(c.tipo === 2) draw += `<rect x="${x}" y="${y-20}" width="${xf-x}" height="15" fill="var(--error)" opacity="0.4"/>`;
+    else if(c.tipo === 3) draw += `<polygon points="${x},${y-5} ${xf},${y-5} ${xf},${y-30}" fill="var(--error)" opacity="0.4" />`;
+    else if(c.tipo === 4) draw += `<polygon points="${x},${y-5} ${xf},${y-5} ${x},${y-30}" fill="var(--error)" opacity="0.4" />`;
+    else if(c.tipo === 5) {
+      let midX = (x + xf) / 2;
+      draw += `<path d="M ${x} ${y-5} L ${xf} ${y-5} L ${xf} ${y-30} Q ${midX} ${y-5} ${x} ${y-5} Z" fill="var(--error)" opacity="0.4" />`;
+    }
+    else if(c.tipo === 6 || c.tipo === 7) {
+      let path = `M ${x} ${y-5}`;
+      let steps = 20;
+      for(let i=0; i<=steps; i++){
+        let pct = i/steps;
+        let curX = x + pct*(xf-x);
+        let val = c.tipo === 6 ? Math.sin(pct * Math.PI) : Math.cos(pct * Math.PI / 2);
+        let curY = y - 5 - (25 * val);
+        path += ` L ${curX} ${curY}`;
+      }
+      path += ` L ${c.tipo===6 ? xf : x} ${y-5} Z`;
+      draw += `<path d="${path}" fill="var(--error)" opacity="0.4" />`;
+    }
+  });
+
+  // Se añaden los markers de las flechas (Recta para fuerzas, Curva/Angulada para momentos)
+  let defs = `
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M 0 0 L 8 4 L 0 8 Z" fill="var(--error)" />
+      </marker>
+      <marker id="arrow-mom" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+        <path d="M 0 2 L 8 5 L 0 8 Z" fill="var(--purple)" />
+      </marker>
+    </defs>
+  `;
+  svg.innerHTML = defs + draw;
+}
+window.onload = updateAll;
+</script>
+</body>
+</html>
